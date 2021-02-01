@@ -18,7 +18,7 @@
     if (count($arrayips) > 0){
       $varout = '';
       foreach($arrayips as $printy){
-        $varout = $varout . $printy . PHP_EOL;
+        $varout = $varout . $printy . '\n';
         print($printy . '<br>');
       }
       file_put_contents('/var/www/html/ipscan/ips.txt', $varout);
@@ -36,10 +36,42 @@
     if ($var == NULL)
       print('<br>Hit populate in order to create the ips.txt file in this dir');
 
-      var_dump($var);
+      try{
+      $jar = json_decode($var, true);
+    }
+    catch(Exception $e) {
+      print('Error decoding jason');
+      return;}
+
+    foreach($jar as $arr)
+      print($arr['name']);
   }
 
-  if ($_GET['command'] == 'makegrid')
+  if ($_GET['command'] == 'etc')
+  {
+    return;
+  }
+
+  if ($_GET['command'] == 'getipgrid')
+  {
+    $ipvar = $_GET['ip'];
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://whois.toolforge.org/gateway.py?lookup=true&ip=' . $ipvar);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1");
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //very important
+    $dat = curl_exec($ch);
+    curl_close($ch);
+    //parse data into an array
+    $subarr = array();
+    $ipname1 = explode("nets</th><td>", $dat);
+    $ipname2 = explode('</table>', $ipname1[1]);
+    $ipname = $ipname2[0] . '</table><br><br>';
+    print('<h3>' . $ipvar . '</h3>' . $ipname);
+  }
+
+  if ($_GET['command'] == 'makegrid') //deprecated
   {
     $ips = file_get_contents('/var/www/html/ipscan/ips.txt');
     if ($ips == NULL){
@@ -47,6 +79,23 @@
       return;
     }
     $arrayips = explode(PHP_EOL, $ips);
-    //continue
+    $ipinfo = array();
+    foreach($arrayips as $ipvar)
+    {
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, 'https://whois.toolforge.org/gateway.py?lookup=true&ip=' . $ipvar);
+      curl_setopt($ch, CURLOPT_HEADER, 0);
+      curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1");
+      curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //very important
+      $dat = curl_exec($ch);
+      curl_close($ch);
+      //parse data into an array
+      $subarr = array();
+      $ipname1 = explode("nets</th><td>", $dat);
+      $ipname2 = explode('</table>', $ipname1[1]);
+      $ipname = $ipname2[0] . '</table><br><br>';
+      print('<h3>' . $ipvar . '</h3>' . $ipname);
+    }
   }
  ?>

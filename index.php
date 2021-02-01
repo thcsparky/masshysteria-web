@@ -14,8 +14,9 @@
   <div class="panel-heading"><b>IP Logs</b>
     <button type="button" class="button btn-primary" onclick="populate();">Populate List</button>
     <button type="button" class="button btn-danger" onclick="clearLog();">Clear NGinX log</button>
-    <button type="button" class="button btn-default" onclick="loadGrid();">Load old grid of whois</button>
-    <button type="button" class="button btn-default" onclick="makeGrid();">Recreate WHOIS grid</button>
+
+    <button type="button" class="button btn-default" onclick="makegrid();">Recreate WHOIS grid</button>
+
 
   </div>
   <div class="panel-body" id="sett">
@@ -44,11 +45,33 @@ client.get('http://159.203.64.37/ipscan/backend.php?command=loadgrid', function(
 })
 }
 
-function makeGrid() {
+function makegrid() {
 var client = new HttpClient();
-client.get('http://159.203.64.37/ipscan/backend.php?command=makegrid', function(response){
-  document.getElementById("sett").innerHTML = response;
+
+client.get('http://159.203.64.37/ipscan/backend.php?command=loadIPS', function(response){
+  var ips = response;
+  var iplist = ips.split('<br>');
+  var curtext = document.getElementById("sett").innerHTML;
+  //another get inside this function
+  var i;
+  for(i = 0; i < iplist.length; i++)
+  {
+    if (iplist[i] == ''){ break; }
+    var client2 = new HttpClient();
+    client2.get('http://159.203.64.37/ipscan/backend.php?command=getipgrid&ip=' + iplist[i], function(response){
+      curtext += response;
+      document.getElementById('sett').innerHTML = curtext;
+    })
+  }
 })
+}
+//continued
+
+function etcetera(){
+  var client = new HttpClient();
+  client.get('http://159.203.64.37/ipscan/backend.php?command=etc', function(response){
+    document.getElementById('sett').innerHTML = response;
+  })
 }
 
 var HttpClient = function() { //ReUsable http requester
